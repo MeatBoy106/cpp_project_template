@@ -48,14 +48,20 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googlebench-src
                  ${CMAKE_BINARY_DIR}/googlebench-build
                  EXCLUDE_FROM_ALL)
 
-find_package(GTest)
+include(GoogleTest)
 
-# Add Benchmark ##################################################################
-# add_executable(target source)
-# target_link_libraries(target benchmark_main other_dep)
-# add_test(NAME target COMMAND target)
+macro(add_gtest_test test_name sources)
+    add_executable(${test_name} ${sources})
+    target_link_libraries(${test_name} PRIVATE gtest_main ${ARGN})
+    gtest_discover_tests(${test_name})
+endmacro(add_gtest_test)
 
-# Add Test #######################################################################
-# add_executable(target source)
-# target_link_libraries(tagrget gtest_main other_dep)
-# gtest_discover_tests(target)
+macro(add_gbench_bench bench_name sources)
+    add_executable(${bench_name} ${sources})
+    target_link_libraries(${bench_name} benchmark_main ${ARGN})
+endmacro(add_gbench_bench)
+
+
+###############################################################################
+add_gtest_test(minimal_test minimal_test.cpp)
+add_gbench_bench(minimal_bench minimal_bench.cpp)
