@@ -1,66 +1,35 @@
-# Download and unpack googletest at configure time
-configure_file(${PROJECT_SOURCE_DIR}/cmake/CMakeLists_gtest.txt.in ${CMAKE_BINARY_DIR}/googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
-if(result)
-  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download )
-if(result)
-  message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
-
-# Prevent overriding the parent project's compiler/linker
-# settings on Windows
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG release-1.12.1
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-# Add googletest directly to our build. This defines
-# the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-                 ${CMAKE_BINARY_DIR}/googletest-build
-                 EXCLUDE_FROM_ALL)
+FetchContent_Declare(
+  googlebench
+  GIT_REPOSITORY https://github.com/google/benchmark.git
+  GIT_TAG v1.7.0
+)
 
-
-
-
-# Download and unpack googlebench at configure time
-configure_file(${PROJECT_SOURCE_DIR}/cmake/CMakeLists_bench.txt.in ${CMAKE_BINARY_DIR}/googlebench-download/CMakeLists.txt)
-set(BENCHMARK_ENABLE_TESTING OFF)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googlebench-download )
-if(result)
-  message(FATAL_ERROR "CMake step for googlebench failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googlebench-download )
-if(result)
-  message(FATAL_ERROR "Build step for googlebench failed: ${result}")
-endif()
-
-# Add googletest directly to our build. This defines
-# the gtest and gtest_main targets.
-add_subdirectory(${CMAKE_BINARY_DIR}/googlebench-src
-                 ${CMAKE_BINARY_DIR}/googlebench-build
-                 EXCLUDE_FROM_ALL)
+FetchContent_MakeAvailable(
+  googletest
+  googlebench
+)
 
 include(GoogleTest)
 
 macro(add_gtest_test test_name sources)
     add_executable(${test_name} ${sources})
-    target_link_libraries(${test_name} PRIVATE gtest_main ${ARGN})
+    target_link_libraries(${test_name} GTest::gtest_main)
     gtest_discover_tests(${test_name})
 endmacro(add_gtest_test)
 
 macro(add_gbench_bench bench_name sources)
     add_executable(${bench_name} ${sources})
-    target_link_libraries(${bench_name} benchmark_main ${ARGN})
+    target_link_libraries(${bench_name} benchmark::benchmark_main ${ARGN})
 endmacro(add_gbench_bench)
-
 
 ###############################################################################
 add_gtest_test(minimal_test minimal_test.cpp)
